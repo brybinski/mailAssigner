@@ -3,6 +3,11 @@ import csv
 import time
 import smtplib
 import ssl
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 
 t = int(time.time() * 1000.0)
 random.seed(((t & 0xff000000) >> 24) +
@@ -73,9 +78,6 @@ for i in range(0, len(result_list)):
 for i in range(0, len(result_list)):
     result_list[i] = (data[i][0], result_list[i][1], result_list[i][2])
 
-print(data)
-print(result_list)
-
 #   # backup plan
 # with open('result.csv', 'w') as f:
 #     write = csv.writer(f)
@@ -92,6 +94,9 @@ password = "7zzm^bT$1UcRwfeg@r9xK#Yak0e#IQzVe4a@WL%WhWef&61#2p9SHz6SqZeIDrsb"
 
 print("To send emails enter: Y/y")
 x = input()
+
+# for debuging
+res: list[str] = []
 if x == "Y" or "y":
 
     context = ssl.create_default_context()
@@ -99,11 +104,11 @@ if x == "Y" or "y":
     with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
         server.login("rybamailforcoding@gmail.com", password)
 
-        for i in data:
-            message = f"""\
-            Subject: Testowa wiadomosc od ryby v2
-        
-            Ogolnie to jesli jestes {i[1]} {i[2]},twoj adres email to {i[0]}, to moj program dziala"""
-            print("\n"+message)
-            server.sendmail("rybamailforcoding@gmail.com", i[0], message)
-
+        for i in result_list:
+            message = MIMEMultipart()
+            message["From"] = "rybamailforcoding@gmail.com"
+            message["To"] = i[0]
+            message["Subject"] = "Losowanie mikołajkowe"
+            body = f"Gratulacje, \ntwój los to {i[1]} {i[2]}\n\npozdro Papuez xD"
+            message.attach(MIMEText(body, "plain"))
+            server.sendmail("rybamailforcoding@gmail.com", i[0], message.as_string())
