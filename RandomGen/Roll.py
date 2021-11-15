@@ -1,26 +1,32 @@
 import random
-from datetime import datetime
 import csv
 import time
+import smtplib
+import ssl
 
-
-t = int( time.time() * 1000.0 )
-random.seed( ((t & 0xff000000) >> 24) +
-             ((t & 0x00ff0000) >>  8) +
-             ((t & 0x0000ff00) <<  8) +
-             ((t & 0x000000ff) << 24)   )
+t = int(time.time() * 1000.0)
+random.seed(((t & 0xff000000) >> 24) +
+            ((t & 0x00ff0000) >> 8) +
+            ((t & 0x0000ff00) << 8) +
+            ((t & 0x000000ff) << 24))
 
 with open('D:\\test.csv', newline='') as f:
     reader = csv.reader(f)
     data = list(reader)
 
+
+copy_data = tuple(data)
+print(copy_data)
+
 def add_idx(lst):
     for i in range(0, len(lst)):
         lst[i].insert(0, i)
 
+
 def remove_idx(lst):
     for i in lst:
         del i[0]
+
 
 def roll(lst: list[list[str]]):
     count: int = len(lst)
@@ -44,7 +50,7 @@ def roll(lst: list[list[str]]):
                 rolled.append(i)
                 break
 
-            dice = (random.randint(0, len(unrolled)-1))
+            dice = (random.randint(0, len(unrolled) - 1))
             while dice == i:
                 dice = (random.randint(0, len(unrolled) - 1))
 
@@ -59,23 +65,45 @@ def roll(lst: list[list[str]]):
     remove_idx(after_roll)
     return after_roll
 
-
-test_list = [[0, "Bartosz", "Rybiński"],
-             [1, "Arek", "Ryb"],
-             [2, "Ania", "24Ryb"],
-             [3, "Mariusz"],
-             [4, "Janusz", "Rki"]]
-
-
-print(roll(data))
-
-
 result_list = roll(data)
-for i in range(0, len(result_list)):
-    result_list[i][0] = data[i][0]
 
-with open('result.csv', 'w') as f:
-    # using csv.writer method from CSV package
-    write = csv.writer(f)
-    write.writerow(["email", "First Name", "Last Name"])
-    write.writerows(result_list)
+for i in range(0, len(result_list)):
+    result_list[i] = tuple(result_list[i])
+
+for i in range(0, len(result_list)):
+    result_list[i] = (data[i][0], result_list[i][1], result_list[i][2])
+
+print(data)
+print(result_list)
+
+#   # backup plan
+# with open('result.csv', 'w') as f:
+#     write = csv.writer(f)
+#     write.writerow(["email", "First Name", "Last Name"])
+#     write.writerows(result_list)
+
+
+
+# Here I will establish ssl connection and send email
+port = 465  # For SSL
+# this is the most unsecure way I could implement this, especially bcs its a public repo xD
+# (dont worry, I will change that password later)
+password = "7zzm^bT$1UcRwfeg@r9xK#Yak0e#IQzVe4a@WL%WhWef&61#2p9SHz6SqZeIDrsb"
+
+print("To send emails enter: Y/y")
+x = input()
+if x == "Y" or "y":
+
+    context = ssl.create_default_context()
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
+        server.login("rybamailforcoding@gmail.com", password)
+
+        for i in data:
+            message = f"""\
+            Subject: Testowa wiadomosc od ryby v2
+        
+            Ogolnie to jesli jestes {i[1]} {i[2]},twoj adres email to {i[0]}, to moj program dziala"""
+            print("\n"+message)
+            server.sendmail("rybamailforcoding@gmail.com", i[0], message)
+
